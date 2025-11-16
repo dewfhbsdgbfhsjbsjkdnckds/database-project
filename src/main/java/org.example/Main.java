@@ -4,6 +4,7 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.swing.plaf.nimbus.State;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -30,7 +31,6 @@ public class Main {
         properties.setProperty("password", dbPassword);
 
         Connection connection = DriverManager.getConnection(url, properties);
-        PreparedStatement statement = connection.prepareStatement()
 
 
         Scanner scanner = new Scanner(System.in);
@@ -38,7 +38,7 @@ public class Main {
         String username = scanner.nextLine();
         System.out.println("\nCreate Password: ");
         String password = scanner.nextLine();
-        createUser(username, password, usersTable, statement);
+        createUser(username, password, usersTable, connection);
 
         // salt is unique for each user
         // todo instead of using a map, store this data inside a database
@@ -50,7 +50,7 @@ public class Main {
         // arrays.equals is needed here because otherwise java would compare memory addresses, like pointers, to check for equality
         // newhash == hash will always return false, as they have different memory addresses
     }
-    public static void createUser(String user, String pass, String table, Statement statement){
+    public static void createUser(String username, String pass, String table, Connection connection){
         // java strong random number generator
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];
@@ -62,17 +62,22 @@ public class Main {
         try {
             SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
             hash = secretKeyFactory.generateSecret(keySpec).getEncoded();
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            System.out.println(Arrays.toString(hash));
+            System.out.println(Arrays.toString(salt));
+            // todo postgre does NOT like 0x00, so uh idk maybe ill use binary or something
+            String hashString = new String(hash, );
+            String saltString = new String(salt, StandardCharsets.UTF_8);
+            // put hash and salt into database
+            String sqlStatement = "INSERT INTO " + table + " (name, hash, salt) VALUES (?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(sqlStatement);
+            statement.setString(1, username);
+            statement.setString(2, hashString);
+            statement.setString(3, saltString);
+            statement.execute();
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | SQLException e) {
             throw new RuntimeException(e);
         }
 
-        System.out.println(hash.toString());
-        // put hash and salt into database
-        try {
-            statement.executeUpdate("INSERT INTO " + table + "(name, hash, salt) VALUES ( '" + user + "', '" + hash + "', '" + salt + "')");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static boolean testLogin(String user, String pass){
