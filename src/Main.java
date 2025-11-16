@@ -10,9 +10,12 @@ import java.sql.*;
 
 public class Main {
     public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeySpecException, SQLException {
-        String url = "";
+        String url = "jdbc:postgresql:mydb";
         Properties properties = new Properties();
-        properties.setProperty("user", "gfjnf");
+        String username;
+        properties.setProperty("user", );
+        properties.setProperty("password", "");
+
         Connection connection = DriverManager.getConnection(url, properties);
 
 
@@ -49,6 +52,6 @@ public class Main {
            System.out.println("signed in");
         }
         System.out.println("hash is:               " + Arrays.toString(newHash));
-        System.out.println("test password hash is: " + Arrays.toString(passwordsMap.get(username).getFirst()));
+        System.out.println("test password hash is: " + Arrays.toString(passwordsMap.get(username).get(0)));
     }
 }
