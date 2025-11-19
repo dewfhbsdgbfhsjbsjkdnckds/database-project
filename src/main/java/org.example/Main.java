@@ -50,6 +50,7 @@ public class Main {
         // arrays.equals is needed here because otherwise java would compare memory addresses, like pointers, to check for equality
         // newhash == hash will always return false, as they have different memory addresses
     }
+    // instead of passing the database connection as an argument, i can create a database class that has a public function to get the database connection
     public static void createUser(String username, String pass, String table, Connection connection){
         // java strong random number generator
         SecureRandom random = new SecureRandom();
